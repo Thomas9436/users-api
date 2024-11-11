@@ -8,7 +8,7 @@ const connectDB = require('./database/db');
 const routes = require('./routes/index');
 
 connectDB();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 app.use(express.json());
 
@@ -38,6 +38,11 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 app.get('/', (req, res) => {
     res.send('Bienvenue sur mon API!');
 });
+
+// Route de test pour users-api
+app.get('/users/test', (req, res) => {
+    res.send('Test is Valid');
+  });
 
 app.listen(port, () => {
     console.log(`Serveur en écoute sur http://localhost:${port}`);

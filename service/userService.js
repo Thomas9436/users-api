@@ -1,3 +1,4 @@
+// user-service/services/userService.js
 const { client, publishMessage } = require('../config/mqttClient');
 const bcrypt = require('bcrypt');
 const User = require('../model/users');
@@ -13,9 +14,13 @@ client.on('connect', () => {
     client.subscribe('user-login', (err) => {
         if (!err) console.log('Souscrit au topic user-login');
     });
+
+    client.subscribe('user-get', (err) => {
+        if (!err) console.log('Souscrit au topic user-get');
+    });
 });
 
-// Gestion des messages MQTT pour l'inscription et la connexion
+// Gestion des messages MQTT pour l'inscription, la connexion et la récupération d'utilisateur
 client.on('message', async (topic, message) => {
     const data = JSON.parse(message.toString());
 
@@ -28,6 +33,12 @@ client.on('message', async (topic, message) => {
         const response = await loginUser(data);
         publishMessage('user-response', JSON.stringify(response));
     }
+    
+    if (topic === 'user-get') {
+        const response = await getUserById(data.userId);
+        response.correlationId = data.correlationId;
+        publishMessage('user-get-response', JSON.stringify(response));
+    }    
 });
 
 // Fonction pour inscrire un utilisateur
@@ -50,8 +61,6 @@ async function loginUser({ email, password }) {
         return { email, isMatch: false, message: 'Utilisateur ou mot de passe incorrect.' };
     }
 
-    console.log(`Mot de passe stocké pour ${email}: ${user.password}`); // Vérifie le hachage en DB
-
     const isMatch = await bcrypt.compare(password, user.password);
 
     return {
@@ -62,36 +71,14 @@ async function loginUser({ email, password }) {
     };
 }
 
+// Fonction pour récupérer un utilisateur par ID
 async function getUserById(userId) {
-    return await User.findById(userId).select('-password');
-}
-
-async function updateUserById(userId, updates) {
-    const allowedUpdates = ['firstName', 'lastName', 'email'];
-    const isValidUpdate = Object.keys(updates).every((key) => allowedUpdates.includes(key));
-
-    if (!isValidUpdate) {
-        throw new Error('Mise à jour invalide.');
-    }
-
-    return await User.findByIdAndUpdate(userId, { $set: updates }, { new: true, runValidators: true }).select(
-        '-password'
-    );
-}
-
-async function deleteUserById(userId) {
-    return await User.findByIdAndDelete(userId);
-}
-
-async function getAllUsers() {
-    return await User.find().select('-password');
+    const user = await User.findById(userId).select('-password');
+    return user ? { userId, status: 'success', user } : { userId, status: 'error', message: 'Utilisateur non trouvé' };
 }
 
 module.exports = {
     registerUser,
     loginUser,
-    getUserById,
-    updateUserById,
-    deleteUserById,
-    getAllUsers
+    getUserById
 };
