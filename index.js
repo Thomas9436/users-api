@@ -20,7 +20,7 @@ app.use(
     })
 );
 
-app.use('/api/', routes);
+app.use(routes);
 
 const swaggerOptions = {
     swaggerDefinition: {
@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 // Route de test pour users-api
 app.get('/users/test', (req, res) => {
     res.send('Test is Valid');
-  });
+});
 
 app.listen(port, () => {
     console.log(`Serveur en écoute sur http://localhost:${port}`);

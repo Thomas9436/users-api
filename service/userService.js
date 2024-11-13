@@ -33,12 +33,12 @@ client.on('message', async (topic, message) => {
         const response = await loginUser(data);
         publishMessage('user-response', JSON.stringify(response));
     }
-    
+
     if (topic === 'user-get') {
         const response = await getUserById(data.userId);
         response.correlationId = data.correlationId;
         publishMessage('user-get-response', JSON.stringify(response));
-    }    
+    }
 });
 
 // Fonction pour inscrire un utilisateur
