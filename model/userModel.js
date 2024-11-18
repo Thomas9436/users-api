@@ -63,12 +63,6 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    cvs: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'CV'
-        }
-    ]
 });
 
 module.exports = mongoose.model('User', UserSchema);

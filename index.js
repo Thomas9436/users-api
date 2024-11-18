@@ -5,13 +5,16 @@ const swaggerUI = require('swagger-ui-express');
 const app = express();
 require('dotenv').config();
 const connectDB = require('./database/db');
-const routes = require('./routes/index');
+const userRoutes = require('./routes/userRoutes');
+const { consumeUserEvents } = require('./services/consumers/userConsumer');
 
 connectDB();
 const port = process.env.PORT || 4000;
 
 app.use(express.json());
 
+// Lance le consommateur RabbitMQ
+consumeUserEvents().catch((error) => console.error('Erreur RabbitMQ:', error));
 app.use(
     cors({
         origin: '*', // Autorise toutes les origines
@@ -20,7 +23,7 @@ app.use(
     })
 );
 
-app.use(routes);
+app.use(userRoutes);
 
 const swaggerOptions = {
     swaggerDefinition: {
