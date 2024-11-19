@@ -81,11 +81,27 @@ async function loginUser({ email, password, correlationId }) {
   }
 }
 
+async function handleUserValidation({ payload, correlationId }) {
+  try {
+    const user = await User.findById({userId : payload.userId});
+    const isValid = !!user;
+    return {
+      correlationId,
+      status: isValid ? 'success' : 'error',
+      message: isValid ? 'User is valid.' : 'User not found.',
+    };
+  } catch (error) {
+    console.error('Error in handleUserValidation:', error);
+    return { correlationId, status: 'error', message: 'User validation failed.' };
+  }
+}
+
 module.exports = {
   getAllUsers,
   getUserById,
   updateUserById,
   deleteUserById,
   registerUser, 
-  loginUser
+  loginUser,
+  handleUserValidation
 };
