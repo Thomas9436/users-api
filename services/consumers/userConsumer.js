@@ -3,57 +3,57 @@ const userService = require('../userService');
 const connectRabbitMQ = require('../../clients/rabbitmq');
 
 async function consumeUserEvents() {
-  const channel = await connectRabbitMQ();
-  
-  const queue = 'user-service.queue';
-  const exchange = 'user.events';
+    const channel = await connectRabbitMQ();
 
-  await channel.assertExchange(exchange, 'topic', { durable: true });
-  await channel.assertQueue(queue, { durable: true });
-  await channel.bindQueue(queue, exchange, 'user.*');
+    const queue = 'user-service.queue';
+    const exchange = 'user.events';
 
-  console.log(`Waiting for user events in queue: ${queue}...`);
+    await channel.assertExchange(exchange, 'topic', { durable: true });
+    await channel.assertQueue(queue, { durable: true });
+    await channel.bindQueue(queue, exchange, 'user.*');
 
-  channel.consume(queue, async (msg) => {
-    if (msg) {
-      const event = JSON.parse(msg.content.toString());
-      console.log(`Received event: ${event.event}`, event.payload);
+    console.log(`Waiting for user events in queue: ${queue}...`);
 
-      if (!event.payload) {
-        console.error('Payload absent pour cet événement:', event);
-        channel.ack(msg); // Acquitte le message pour éviter des re-traitements
-        return;
-      }
+    channel.consume(queue, async (msg) => {
+        if (msg) {
+            const event = JSON.parse(msg.content.toString());
+            console.log(`Received event: ${event.event}`, event.payload);
+            console.log(event.payload);
 
-      const { correlationId, payload } = event;
-      let response;
+            if (!event.payload) {
+                console.error('Payload absent pour cet événement:', event);
+                channel.ack(msg); // Acquitte le message pour éviter des re-traitements
+                return;
+            }
 
-    switch (event.event) {
-      case 'user.register':
-        response = await userService.registerUser({ payload, correlationId });
-        break;
-      case 'user.login':
-        response = await userService.loginUser({...payload, correlationId });
-        break;
-      case 'borrow.validate-user':
-        response = await userService.handleUserValidation({ payload, correlationId });
-        break;
-      default:
-        console.warn(`Warning -> Événement non pris en charge: ${event.event}`);
-        response = null // Pas de réponse à générer pour les événements non pris en charge
-    }
+            const { correlationId, payload } = event;
+            let response;
 
-     //Produit un évenement UserResponse 
-      if (response) {
-        await publishUserResponse(response);
-      } else {
-        console.warn('Aucune réponse générée pour cet événement:', event);
-      }
+            switch (event.event) {
+                case 'user.register':
+                    response = await userService.registerUser({ payload, correlationId });
+                    break;
+                case 'user.login':
+                    response = await userService.loginUser({ ...payload, correlationId });
+                    break;
+                case 'user.validate-user':
+                    response = await userService.handleUserValidation({ payload });
+                    break;
+                default:
+                    console.warn(`Warning -> Événement non pris en charge: ${event.event}`);
+                    response = null; // Pas de réponse à générer pour les événements non pris en charge
+            }
 
-      channel.ack(msg); // Acquitte le message après traitement
-    }
-  });
+            //Produit un évenement UserResponse
+            if (response) {
+                await publishUserResponse(response);
+            } else {
+                console.warn('Aucune réponse générée pour cet événement:', event);
+            }
+
+            channel.ack(msg); // Acquitte le message après traitement
+        }
+    });
 }
-
 
 module.exports = { consumeUserEvents };

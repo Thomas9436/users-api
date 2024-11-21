@@ -13,7 +13,6 @@ exports.getUser = async (req, res) => {
     }
 };
 
-
 exports.updateUser = async (req, res) => {
     try {
         const updates = { ...req.body };
