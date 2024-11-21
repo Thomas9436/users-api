@@ -131,7 +131,7 @@ La Gateway est le seul service exposé publiquement via Traefik. Elle joue le r�
 Ce tableau de bord est activé uniquement pour le suivi des routes et services.
 
 3. RabbitMQ
-   URL : http://localhost:5672
+   URL : http://localhost:15672
 
 Identifiant par défaut : user
 Mot de passe par défaut : password
@@ -224,7 +224,7 @@ La Gateway est le seul service exposé publiquement via Traefik. Elle joue le r�
 Traefik n'a pas d'intêret en local.
 
 3. RabbitMQ
-   URL : http://localhost:5672
+   URL : http://localhost:15672
 
 Il faut lancer le conteneur RabbitMQ même si on test tous les services en local :
 ```yaml
